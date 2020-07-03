@@ -4,13 +4,16 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = r'\xc5\xba\xeb\xb6F\xaa\xdaDN\xc4\xe3\x80ez\xd1:?\xa9\x0c\x14\xf2\xd2\xa4j'
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = r'6rf\bsdujhsudu<>Ig<()7gh1s/9dsfhk!jas8&9r413jhaduyzvcx\s'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.db')
+
+DATASETS_DIRECTORY = 'datasets/saved'
 
 db = SQLAlchemy(app)
 
-from myproject.files.views import files_blueprint
+db.create_all()
 
-app.register_blueprint(files_blueprint,url_prefix="/files")
+from myproject.datasets.views import datasets_blueprint
+
+app.register_blueprint(datasets_blueprint,url_prefix="/datasets")

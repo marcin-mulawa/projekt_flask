@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+  <title>Ładowanie plików na serwer</title>
+  
+  <form action="upload_result"
+        method="post"
+        enctype="multipart/form-data">
+  
+    <div class="form-group">
+      <div>
+          <label for="plik">Znak rozdzielający kolumny danych w pliku</label>
+          <input type="text" name="col_sep" placeholder='wpisz znak' value=';'>
+      </div>
+      <div>
+        <label for="plik">Wybierz plik do wysłania</label>
+        <input type="file" name="plik">
+      </div>
+    </div>
+  
+    <button type="submit">Wrzuć plik na serwer</button>
+  </form>
+{% endblock %}

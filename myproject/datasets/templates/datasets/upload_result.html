@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<title>Dodawanie zbioru rezultat</title>
+{% if dataset %}
+<p>
+    Dodano plik: <b>{{dataset.filename}}</b>
+    <br/>
+    Folder: {{dataset.directory}}
+</p>
+{% else %}
+<p>
+    Nastąpił błąd podczas wysyłania pliku na serwer.
+    <br/>
+    {{info}}
+</p>
+{% endif %}
+<a href='/'>Powrót do listy danych</a>
