@@ -57,22 +57,24 @@ def upload_result():
     print(f)
     filename = secure_filename(f.filename)
     dirname = filename.split('.')[0]
+    print(type(filename))
      
-    #if dirname in os.listdir('myproject/datasets/saved'):
-    #return redirect(f"/datasets/upload_result?file={filename}&error=1")
-    #else:
-    dataset_object = get_file_info(filename, columns_separator)
-        #  # jeżeli nie istnieje to tworzymy folder dla pliku
-        # try:
-        #     os.mkdir(f'myproject/datasets/saved/{filename}')
-        # except Exception as e:
-        #     # nie możemy stworzyć folderu, dlatego należy uznać to za błąd
-        #     return redirect(f'/datasets/upload_result?file={filename}&error=2')
+    if dirname in os.listdir('myproject/datasets/saved'):
+        return render_template('upload_result.html', info=f'plik {filename} już istnieje')
+    else:
+        dataset_object = get_file_info(filename, columns_separator)
+          # jeżeli nie istnieje to tworzymy folder dla pliku
+        try:
+            os.mkdir(f'myproject/datasets/saved/{dirname}')
+        except Exception as e:
+             # nie możemy stworzyć folderu, dlatego należy uznać to za błąd
+            return render_template('upload_result.html',info='Nie możemy stworzyć folderu')
         # zapisujemy plik, używamy funkcji join do łączenia ścieżek
-        #name_with_dir = os.path.join(dataset_object.directory, dataset_object.filename)
-        #f.save(name_with_dir)
+        name_with_dir = os.path.join(dataset_object.directory, dataset_object.filename)
+        f.save(name_with_dir)
         # TODO zapisujemy dataset_object w bazie danych
-        #db.session.add(dataset_object)
-        #db.session.commit()
+        if db.session.query(Dataset).filter_by(filename=dataset_object.filename).count() < 1:
+            db.session.add(dataset_object)
+            db.session.commit()
         # oraz generujemy szablon added_dataset.html z odpowiednią informacją
-    return redirect(f'/datasets/upload_result?file={filename}')
+    return render_template('upload_result.html', dataset=dataset_object)

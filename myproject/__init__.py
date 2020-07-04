@@ -8,11 +8,10 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SECRET_KEY'] = r'6rf\bsdujhsudu<>Ig<()7gh1s/9dsfhk!jas8&9r413jhaduyzvcx\s'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.db')
 
-DATASETS_DIRECTORY = 'datasets/saved'
+DATASETS_DIRECTORY = 'myproject/datasets/saved'
 
 db = SQLAlchemy(app)
 
-db.create_all()
 
 from myproject.datasets.views import datasets_blueprint
 

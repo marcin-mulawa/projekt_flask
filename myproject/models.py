@@ -1,6 +1,9 @@
 from myproject import db
 
 class Dataset(db.Model):
+    
+    __tablename__ = 'dataset'
+    
     id = db.Column(db.Integer, primary_key=True)
     # nazwa pliku
     # unique=True powoduje, że w całej tabeli może istnieć tylko jeden rekord z daną nazwą pliku
