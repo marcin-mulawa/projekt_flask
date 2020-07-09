@@ -15,10 +15,14 @@ def get_file_info(filename, columns_separator, coltypes, colnames):
     '''
     Funkcja zwraca obiekt z danymi dotyczącymi pliku, które będzie można dodać do bazy danych.
     '''
-
-
-
     dir_name = filename.split('.')[0]
+    ''' wczytać plik DATASETS_DIRECTORY/dir_name/filename
+        sprobowac ustawic nazwy kolumn z listy colnames oraz typy z listy coltypes,
+        jezeli się nie uda to return render_template('bad_colnames_types.html')
+        zrobić statystyki i zapisac je tak jak w opisie pkt 8
+        histogramy zapisac do DATASETS_DIRECTORY/dir_name/colname_hist.png
+        zapisac df do pickla : DATASETS_DIRECTORY/dir_name/dir_name.pkl'''
+
     columns_filename = f'{dir_name}_column_description.csv'
 
 
@@ -71,13 +75,34 @@ def upload_result():
             return render_template('upload_result.html',info='Nie możemy stworzyć folderu')
         # zapisujemy plik, używamy funkcji join do łączenia ścieżek
         name_with_dir = f'{saved_dir}/{file_dirname}/{filename}'
+        
         f.save(name_with_dir)
 
         dataset_object = get_file_info(filename, columns_separator, coltypes, colnames)
-
+        if os.path.exists(name_with_dir):
+            try:
+                os.remove(name_with_dir)
+            except: 
+                pass
         # TODO zapisujemy dataset_object w bazie danych
         if db.session.query(Dataset).filter_by(filename=dataset_object.filename).count() < 1:
             db.session.add(dataset_object)
             db.session.commit()
         # oraz generujemy szablon added_dataset.html z odpowiednią informacją
     return render_template('upload_result.html', dataset=dataset_object)
+
+
+@datasets_blueprint.route('/show_datasets', methods=['GET', 'POST'])
+def show_datasets():
+    pass
+
+
+@datasets_blueprint.route('/remove', methods=['GET', 'POST'])
+def remove():
+    pass
+    #return render_template('remove_dataset.html')
+
+
+@datasets_blueprint.route('/remove_result')
+def remove_result():
+    pass
