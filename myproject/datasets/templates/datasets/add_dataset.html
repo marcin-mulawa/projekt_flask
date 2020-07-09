@@ -15,8 +15,12 @@
       </div>
       <div>
           <label for="header">Dane nie zawierają nazw kolumn</label>
-          <input type="checkbox" id="checkbox" name="no_colnames" onmousedown="this.form.colnames.disabled=this.checked"/>
-          <input type="text" id="colnames" placeholder="Nazwy kolumn po średnikach" disabled />
+          <input type="checkbox" id="checkbox" name="checkbox" onmousedown="this.form.colnames.disabled=this.checked"/>
+          <input type="text" id="colnames" name="colnames" placeholder="Nazwy kolumn po średnikach" disabled />
+      </div>
+      <div>
+        <label for="header">Typy kolumn: bool, int, float, category, object, date</label>
+        <input type="text" id="coltypes" name="coltypes" placeholder="Typy kolumn po średnikach" />
       </div>
       <div>
         <label for="plik">Wybierz plik do wysłania</label>

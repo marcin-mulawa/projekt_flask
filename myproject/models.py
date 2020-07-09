@@ -14,6 +14,9 @@ class Dataset(db.Model):
     # jakim znakiem są rozdzielane kolumny w pliku?
     columns_separator = db.Column(db.String(1), nullable=False)
     number_of_columns = db.Column(db.Integer, nullable=False)
+
+    columns_name = db.Column(db.String(600), nullable=False)
+    columns_type = db.Column(db.String(300), nullable=False)
     # nazwa pliku z opisem kolumn - będzie dodany później, po zajęciach z pandas
     columns_description_filename = db.Column(db.String(80), unique=True, nullable=False)
 

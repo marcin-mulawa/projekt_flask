@@ -11,7 +11,7 @@ datasets_blueprint = Blueprint('dataset',
                               template_folder='templates/datasets')
 
 
-def get_file_info(file, filename, columns_separator):
+def get_file_info(filename, columns_separator, coltypes, colnames):
     '''
     Funkcja zwraca obiekt z danymi dotyczącymi pliku, które będzie można dodać do bazy danych.
     '''
@@ -33,6 +33,8 @@ def get_file_info(file, filename, columns_separator):
         number_of_lines=lines,
         number_of_columns=columns,
         columns_separator=columns_separator,
+        columns_name=str(colnames),
+        columns_type=str(coltypes),
         columns_description_filename=columns_filename)
 
 
@@ -45,25 +47,34 @@ def add():
 def upload_result():
     
     columns_separator = request.form.get('col_sep', ';') # domyślna wartość to średnik
-    checkbox = request.form.get('no_colnames')
+    checkbox = request.form.get('checkbox')
     colnames = request.form.get('colnames')
+    if colnames:
+        colnames = colnames.split(';')
+    coltypes = request.form.get('coltypes')
+    if coltypes:
+        coltypes = coltypes.split(';')
+
     f = request.files["plik"]
     filename = secure_filename(f.filename)
-    dirname = filename.split('.')[0]
+    file_dirname = filename.split('.')[0]
+    saved_dir = r'myproject/datasets/saved'
      
-    if dirname in os.listdir('myproject/datasets/saved'):
+    if file_dirname in os.listdir(saved_dir):
         return render_template('upload_result.html', info=f'plik {filename} już istnieje')
     else:
-        dataset_object = get_file_info(f, filename, columns_separator)
           # jeżeli nie istnieje to tworzymy folder dla pliku
         try:
-            os.mkdir(f'myproject/datasets/saved/{dirname}')
+            os.mkdir(f'{saved_dir}/{file_dirname}')
         except Exception as e:
              # nie możemy stworzyć folderu, dlatego należy uznać to za błąd
             return render_template('upload_result.html',info='Nie możemy stworzyć folderu')
         # zapisujemy plik, używamy funkcji join do łączenia ścieżek
-        name_with_dir = os.path.join(dataset_object.directory, dataset_object.filename)
+        name_with_dir = f'{saved_dir}/{file_dirname}/{filename}'
         f.save(name_with_dir)
+
+        dataset_object = get_file_info(filename, columns_separator, coltypes, colnames)
+
         # TODO zapisujemy dataset_object w bazie danych
         if db.session.query(Dataset).filter_by(filename=dataset_object.filename).count() < 1:
             db.session.add(dataset_object)
