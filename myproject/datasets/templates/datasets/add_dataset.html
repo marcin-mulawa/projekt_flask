@@ -2,6 +2,7 @@
 {% block content %}
 <div class="jumbotron">
   <title>Ładowanie plików na serwer</title>
+
   
   <form action="upload_result"
         method="post"
@@ -11,6 +12,11 @@
       <div>
           <label for="plik">Znak rozdzielający kolumny danych w pliku</label>
           <input type="text" name="col_sep" placeholder='wpisz znak' value=';'>
+      </div>
+      <div>
+          <label for="header">Dane nie zawierają nazw kolumn</label>
+          <input type="checkbox" id="checkbox" name="no_colnames" onmousedown="this.form.colnames.disabled=this.checked"/>
+          <input type="text" id="colnames" placeholder="Nazwy kolumn po średnikach" disabled />
       </div>
       <div>
         <label for="plik">Wybierz plik do wysłania</label>

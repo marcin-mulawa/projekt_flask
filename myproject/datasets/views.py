@@ -3,6 +3,7 @@ from myproject import db, DATASETS_DIRECTORY
 from myproject.models import Dataset
 from werkzeug.utils import secure_filename
 import os
+import pandas as pd
 #from myproject.datasets.forms import AddForm
 
 datasets_blueprint = Blueprint('dataset',
@@ -10,10 +11,12 @@ datasets_blueprint = Blueprint('dataset',
                               template_folder='templates/datasets')
 
 
-def get_file_info(filename, columns_separator):
+def get_file_info(file, filename, columns_separator):
     '''
     Funkcja zwraca obiekt z danymi dotyczącymi pliku, które będzie można dodać do bazy danych.
     '''
+
+
 
     dir_name = filename.split('.')[0]
     columns_filename = f'{dir_name}_column_description.csv'
@@ -35,17 +38,6 @@ def get_file_info(filename, columns_separator):
 
 @datasets_blueprint.route('/add', methods=['GET', 'POST'])
 def add():
-
-    #form = AddForm()
-
-    #if form.validate_on_submit():
-      #  datasets = form.datasets.data
-        
-        #new_file = File(name,path,...)
-        #db.session.add(new_file)
-        #db.session.commit()
-
-        #return redirect(url_for('show_datasets.html'))
     return render_template('add_dataset.html')
 
 
@@ -53,16 +45,16 @@ def add():
 def upload_result():
     
     columns_separator = request.form.get('col_sep', ';') # domyślna wartość to średnik
+    checkbox = request.form.get('no_colnames')
+    colnames = request.form.get('colnames')
     f = request.files["plik"]
-    print(f)
     filename = secure_filename(f.filename)
     dirname = filename.split('.')[0]
-    print(type(filename))
      
     if dirname in os.listdir('myproject/datasets/saved'):
         return render_template('upload_result.html', info=f'plik {filename} już istnieje')
     else:
-        dataset_object = get_file_info(filename, columns_separator)
+        dataset_object = get_file_info(f, filename, columns_separator)
           # jeżeli nie istnieje to tworzymy folder dla pliku
         try:
             os.mkdir(f'myproject/datasets/saved/{dirname}')
