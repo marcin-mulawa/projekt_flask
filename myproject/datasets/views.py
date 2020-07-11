@@ -11,7 +11,7 @@ datasets_blueprint = Blueprint('dataset',
                               template_folder='templates/datasets')
 
 
-def get_file_info(filename, columns_separator, coltypes, colnames):
+def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
     '''
     Funkcja zwraca obiekt z danymi dotyczącymi pliku, które będzie można dodać do bazy danych.
     '''
@@ -24,12 +24,103 @@ def get_file_info(filename, columns_separator, coltypes, colnames):
         zapisac df do pickla : DATASETS_DIRECTORY/dir_name/dir_name.pkl'''
 
     columns_filename = f'{dir_name}_column_description.csv'
+    df = pd.read_csv(f'DATASETS_DIRECTORY/{dir_name}/{filename}', sep=columns_separator)
+    if colnames is not None:
+        df.columns = colnames
+    if coltypes is not None:
+        for column, types in zip(df, coltypes):
+            try:
+                if types == 'date':
+                    df[column] = pd.to_datetime(df[column])
+                else:
+                    df[column] = df[column].astype(types)
+                    print(type(df[column]))
+            except ValueError:
+                print(f'Nie udało się przekonwertować kolumny {column}')
+                df[column] = df[column].astype(str)
+                # W razie złego nazwania kolumny:
+                return render_template('bad_colnames_types.html')
+    #Zapisanie pliku do formatu .pkl
+    df.to_pickle(f'{dir}/dziala.pkl')
 
+    # Funkcja odpowiadająca za utworzenie i zapisanie histogramu
 
+    def histogram(column,dir):
+        plt.figure(figsize=(8, 8))
+        fig = plt.hist(df[column], bins=50)
+        plt.grid(axis='y', alpha=0.75)
+        plt.xlabel('Value', fontsize=15)
+        plt.ylabel('Frequency', fontsize=15)
+        plt.xlim(0, max(df[column]))
+        plt.grid(axis='y', alpha=0.75)
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
+        plt.ylabel('Frequency', fontsize=15)
+        plt.title(column.upper(), fontsize=15)
+        return plt.savefig(f'DATASETS_DIRECTORY/{dir_name}/{column}_hist.png')
 
-    
-    lines=1
-    columns=1
+    # Funkcje zapisu ze względu na typ danych:
+    # Dane typu object
+    def get_object(column):
+        nulls = df[column].isnull().sum()
+        types = df[column].dtypes
+        uniques = df[column].nunique()
+        return f'{column};{types};{uniques};'
+
+    # Dane typu liczbowego
+    def get_nums(column,dir):
+        desc = df[column].describe().loc[['min', 'mean', 'max', '50%', 'std']]
+        types = df[column].dtypes
+        histogram(column)
+        return f'{column};{types};{desc[0]};{desc[1]};{desc[2]};{desc[3]};{desc[4]};DATASETS_DIRECTORY/{dir_name}/{column}_hist.png'
+
+    # Dane typu Category
+    def get_cat(column,dir):
+        uniques = df[column].nunique()
+        types = df[column].dtypes
+        histogram(column)
+        return f'{column};{types};{uniques};DATASETS_DIRECTORY/{dir_name}/{column}_hist.png'
+
+    # Dane typu boolean (wymaga ręcznego rozpisania histogramu ze względu na typ [konwersja '1' i '0' na float])
+    def get_bool(column,dir):
+        uniques = df[column].nunique()
+        types = df[column].dtypes
+        fig = plt.hist((df[column].astype(float)), bins=30)
+        plt.title(column)
+        plt.xlabel("Value")
+        plt.ylabel("Frequency")
+        plt.savefig(column + '_hist.png')
+        return f'{column};{types};DATASETS_DIRECTORY/{dir_name}/{column}_hist.png'
+
+    # Dane typu date:
+    def get_date(column):
+        types = df[column].dtypes
+        mini = df[column].min()
+        maxi = df[column].max()
+        return f'{column};{types};{mini};{maxi}'
+
+    # W tym miejscu następuje zapisanie statystyk do pliku csv
+    with open(columns_filename, 'w', newline='') as csvfile:
+        datawriter = csv.writer(csvfile, delimiter=' ',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for column in df:
+            if df[column].dtypes == 'object':
+                datawriter.writerow([get_object(column)])
+
+            elif df[column].dtypes == 'bool':
+                datawriter.writerow([get_bool(column,dir_name)])
+
+            elif df[column].dtype.name == 'category':
+                datawriter.writerow([get_cat(column,dir_name)])
+
+            elif df[column].dtypes == 'float64' or df[column].dtypes == 'int64':
+                datawriter.writerow([get_nums(column,dir_name)])
+
+            elif df[column].dtypes == 'datetime64[ns]':
+                datawriter.writerow([get_date(column)])
+
+    lines = len(df)
+    columns = len(df.columns)
 
     return Dataset(
         filename=filename,
