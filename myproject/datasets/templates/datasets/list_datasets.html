@@ -2,8 +2,8 @@
 {% block content %}
 <title>Zbiory danych</title>
 {% if datasets|length > 0 %}
-    <div class="table-responsive-sm">    
-        <table class="table-bordered">
+    <div class="table-responsive">    
+        <table class="table-hover">
             <thead>
                 <tr>
                     <th scope="col">Id</th>
@@ -21,7 +21,7 @@
                 {% for file in datasets %}
                     <tr>
                         <th scope="row">{{file.id}}</th>d
-                        <td>{{file.filename}}</td>
+                        <td><a href="details/{{file.filename}}.html">{{file.filename}}</a></td>
                         <td>{{file.directory}}</td>
                         <td>{{file.number_of_lines}}</td>
                         <td>{{file.number_of_columns}}</td>

@@ -4,8 +4,12 @@ from myproject.models import Dataset
 from werkzeug.utils import secure_filename
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np
 import csv
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('agg')
+
 #from myproject.datasets.forms import AddForm
 
 datasets_blueprint = Blueprint('dataset',
@@ -14,7 +18,6 @@ datasets_blueprint = Blueprint('dataset',
 
 
 # Funkcja odpowiadająca za utworzenie i zapisanie histogramu
-
 def histogram(df,column,dir_name):
     plt.figure(figsize=(8, 8))
     fig = plt.hist(df[column], bins=50)
@@ -29,15 +32,15 @@ def histogram(df,column,dir_name):
     plt.title(column.upper(), fontsize=15)
     plt.savefig(f'{DATASETS_DIRECTORY}/{dir_name}/{column}_hist.png')
 
-    # Funkcje zapisu ze względu na typ danych:
-    # Dane typu object
+# Funkcje zapisu ze względu na typ danych:
+# Dane typu object
 def get_object(df,column):
     nulls = df[column].isnull().sum()
     types = df[column].dtypes
     uniques = df[column].nunique()
     return f'{column};{types};{uniques};'
 
-    # Dane typu liczbowego
+# Dane typu liczbowego
 def get_nums(df,column,dir_name):
     desc = df[column].describe().loc[['min', 'mean', 'max', '50%', 'std']]
     types = df[column].dtypes
@@ -69,36 +72,28 @@ def get_date(df,column):
     maxi = df[column].max()
     return f'{column};{types};{mini};{maxi}'
 
+
 def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
     '''
     Funkcja zwraca obiekt z danymi dotyczącymi pliku, które będzie można dodać do bazy danych.
     '''
     dir_name = filename.split('.')[0]
-    ''' wczytać plik DATASETS_DIRECTORY/dir_name/filename
-        sprobowac ustawic nazwy kolumn z listy colnames oraz typy z listy coltypes,
-        jezeli się nie uda to return render_template('bad_colnames_types.html')
-        zrobić statystyki i zapisac je tak jak w opisie pkt 8
-        histogramy zapisac do DATASETS_DIRECTORY/dir_name/colname_hist.png
-        zapisac df do pickla : DATASETS_DIRECTORY/dir_name/dir_name.pkl'''
 
     columns_filename = f'{DATASETS_DIRECTORY}/{dir_name}/{dir_name}_column_description.csv'
     if colnames:
         df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{filename}', names=colnames, sep=columns_separator)
     else:
-        df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{filename}',header=None, sep=columns_separator)
+        df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{filename}', sep=columns_separator)
 
-
-    # df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{filename}', sep=columns_separator)
-    # if colnames is not None:
-    #     df.columns = colnames
-    if coltypes is not None:
+    print(type(coltypes))
+    if coltypes !="":
         for column, types in zip(df, coltypes):
             try:
                 if types == 'date':
                     df[column] = pd.to_datetime(df[column])
                 else:
                     df[column] = df[column].astype(types)
-                    print(type(df[column]))
+                    print(df[column].dtypes)
             except ValueError:
                 print(df)
                 print(f'Nie udało się przekonwertować kolumny {column} na {types}')
@@ -106,14 +101,17 @@ def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
                 # W razie złego nazwania kolumny:
                 return render_template('bad_colnames_types.html')
     #Zapisanie pliku do formatu .pkl
-    df.to_pickle(f'{DATASETS_DIRECTORY}/{dir_name}/{dir_name}.pkl')
+    filename = dir_name + ".pkl"
+    df.to_pickle(f'{DATASETS_DIRECTORY}/{dir_name}/{filename}')
 
 
     # W tym miejscu następuje zapisanie statystyk do pliku csv
     with open(columns_filename, 'w', newline='') as csvfile:
         datawriter = csv.writer(csvfile, delimiter=' ',
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        print(df)
         for column in df:
+            print(column)
             if df[column].dtypes == 'object':
                 datawriter.writerow([get_object(df,column)])
 
@@ -123,7 +121,8 @@ def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
             elif df[column].dtype.name == 'category':
                 datawriter.writerow([get_cat(df,column,dir_name)])
 
-            elif df[column].dtypes == 'float64' or df[column].dtypes == 'int64':
+            #elif df[column].dtypes == 'float64' or df[column].dtypes == 'int64':
+            elif np.issubdtype(df[column].dtype, np.number):
                 datawriter.writerow([get_nums(df,column,dir_name)])
 
             elif df[column].dtypes == 'datetime64[ns]':
@@ -165,8 +164,9 @@ def upload_result():
         filename = secure_filename(f.filename)
         file_dirname = filename.split('.')[0]
         saved_dir = r'myproject/datasets/saved'
-        
+        # Sprawdzamy czy folder z plikiem już istnieje
         if file_dirname in os.listdir(saved_dir):
+            # jeżeli tak to wyswietlamy info że plik istnieje
             return render_template('upload_result.html', info=f'plik {filename} już istnieje')
         else:
             # jeżeli nie istnieje to tworzymy folder dla pliku
@@ -195,9 +195,11 @@ def upload_result():
         return render_template('upload_result.html', dataset=dataset_object)
 
 
-@datasets_blueprint.route('/show_datasets', methods=['GET', 'POST'])
-def show_datasets():
-    pass
+@datasets_blueprint.route('/details/<filename>', methods=['GET', 'POST'])
+def details(filename):
+    dir_name = filename.split('.')[0]
+    df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{dir_name}_column_description.csv', sep=';')
+    return render_template("details.html", table = df)
 
 
 @datasets_blueprint.route('/list', methods=['GET', 'POST'])
