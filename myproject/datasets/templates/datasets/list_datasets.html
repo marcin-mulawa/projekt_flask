@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<title>Zbiory danych</title>
+{% if datasets|length > 0 %}
+    <div class="table-responsive-sm">    
+        <table class="table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">Id</th>
+                    <th scope="col">Nazwa pliku</th>
+                    <th scope="col">Scieżka do folderu</th>
+                    <th scope="col">Liczba wierszy</th>
+                    <th scope="col">Liczba kolumn</th>
+                    <th scope="col">Separator</th>
+                    <th scope="col">Nazwy kolumn</th>
+                    <th scope="col">Typy kolumn</th>
+                    <th scope="col">Nazwa pliku z opisem kolumn</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in datasets %}
+                    <tr>
+                        <th scope="row">{{file.id}}</th>d
+                        <td>{{file.filename}}</td>
+                        <td>{{file.directory}}</td>
+                        <td>{{file.number_of_lines}}</td>
+                        <td>{{file.number_of_columns}}</td>
+                        <td>{{file.columns_separator}}</td>
+                        <td>{{file.columns_name}}</td>
+                        <td>{{file.columns_type}}</td>
+                        <td>{{file.columns_description_filename}}</td>
+                        <td><a href="/datasets/delete">usuń</a></td>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% else %}
+    <h1>Brak danych</h1>
+{% endif %}
+
+{% endblock %}

@@ -49,47 +49,48 @@ def add():
 
 @datasets_blueprint.route('/upload_result', methods=['GET','POST'])
 def upload_result():
-    
-    columns_separator = request.form.get('col_sep', ';') # domyślna wartość to średnik
-    checkbox = request.form.get('checkbox')
-    colnames = request.form.get('colnames')
-    if colnames:
-        colnames = colnames.split(';')
-    coltypes = request.form.get('coltypes')
-    if coltypes:
-        coltypes = coltypes.split(';')
 
-    f = request.files["plik"]
-    filename = secure_filename(f.filename)
-    file_dirname = filename.split('.')[0]
-    saved_dir = r'myproject/datasets/saved'
-     
-    if file_dirname in os.listdir(saved_dir):
-        return render_template('upload_result.html', info=f'plik {filename} już istnieje')
-    else:
-          # jeżeli nie istnieje to tworzymy folder dla pliku
-        try:
-            os.mkdir(f'{saved_dir}/{file_dirname}')
-        except Exception as e:
-             # nie możemy stworzyć folderu, dlatego należy uznać to za błąd
-            return render_template('upload_result.html',info='Nie możemy stworzyć folderu')
-        # zapisujemy plik, używamy funkcji join do łączenia ścieżek
-        name_with_dir = f'{saved_dir}/{file_dirname}/{filename}'
+    if request.method == 'POST':
+        columns_separator = request.form.get('col_sep', ';') # domyślna wartość to średnik
+        checkbox = request.form.get('checkbox')
+        colnames = request.form.get('colnames')
+        if colnames:
+            colnames = colnames.split(';')
+        coltypes = request.form.get('coltypes')
+        if coltypes:
+            coltypes = coltypes.split(';')
+
+        f = request.files["plik"]
+        filename = secure_filename(f.filename)
+        file_dirname = filename.split('.')[0]
+        saved_dir = r'myproject/datasets/saved'
         
-        f.save(name_with_dir)
-
-        dataset_object = get_file_info(filename, columns_separator, coltypes, colnames)
-        if os.path.exists(name_with_dir):
+        if file_dirname in os.listdir(saved_dir):
+            return render_template('upload_result.html', info=f'plik {filename} już istnieje')
+        else:
+            # jeżeli nie istnieje to tworzymy folder dla pliku
             try:
-                os.remove(name_with_dir)
-            except: 
-                pass
-        # TODO zapisujemy dataset_object w bazie danych
-        if db.session.query(Dataset).filter_by(filename=dataset_object.filename).count() < 1:
-            db.session.add(dataset_object)
-            db.session.commit()
-        # oraz generujemy szablon added_dataset.html z odpowiednią informacją
-    return render_template('upload_result.html', dataset=dataset_object)
+                os.mkdir(f'{saved_dir}/{file_dirname}')
+            except Exception as e:
+                # nie możemy stworzyć folderu, dlatego należy uznać to za błąd
+                return render_template('upload_result.html',info='Nie możemy stworzyć folderu')
+            # zapisujemy plik, używamy funkcji join do łączenia ścieżek
+            name_with_dir = f'{saved_dir}/{file_dirname}/{filename}'
+            
+            f.save(name_with_dir)
+
+            dataset_object = get_file_info(filename, columns_separator, coltypes, colnames)
+            if os.path.exists(name_with_dir):
+                try:
+                    os.remove(name_with_dir)
+                except: 
+                    pass
+            # TODO zapisujemy dataset_object w bazie danych
+            if db.session.query(Dataset).filter_by(filename=dataset_object.filename).count() < 1:
+                db.session.add(dataset_object)
+                db.session.commit()
+            # oraz generujemy szablon added_dataset.html z odpowiednią informacją
+        return render_template('upload_result.html', dataset=dataset_object)
 
 
 @datasets_blueprint.route('/show_datasets', methods=['GET', 'POST'])
@@ -97,10 +98,12 @@ def show_datasets():
     pass
 
 
-@datasets_blueprint.route('/remove', methods=['GET', 'POST'])
-def remove():
-    pass
-    #return render_template('remove_dataset.html')
+@datasets_blueprint.route('/list', methods=['GET', 'POST'])
+def list_datasets():
+    # pobieramy wszystkich użytkowników z bazy do zmiennej all_users
+    datasets = db.session.query(Dataset).all()
+    # zwracamy szblon list_users.html podając listę ze wszystkimi użytkownikami
+    return render_template('list_datasets.html', datasets=datasets)
 
 
 @datasets_blueprint.route('/remove_result')
