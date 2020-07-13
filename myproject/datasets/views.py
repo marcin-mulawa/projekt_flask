@@ -78,12 +78,15 @@ def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
     Funkcja zwraca obiekt z danymi dotyczącymi pliku, które będzie można dodać do bazy danych.
     '''
     dir_name = filename.split('.')[0]
+    
+    info = ''
 
     columns_filename = f'{DATASETS_DIRECTORY}/{dir_name}/{dir_name}_column_description.csv'
     if colnames:
         df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{filename}', names=colnames, sep=columns_separator)
     else:
         df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{filename}', sep=columns_separator)
+        colnames = list(df.columns)
 
     print(type(coltypes))
     if coltypes !="":
@@ -95,11 +98,9 @@ def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
                     df[column] = df[column].astype(types)
                     print(df[column].dtypes)
             except ValueError:
-                print(df)
-                print(f'Nie udało się przekonwertować kolumny {column} na {types}')
+                info += f' Nie udało się przekonwertować kolumny {column} na {types}'
                 df[column] = df[column].astype(str)
-                # W razie złego nazwania kolumny:
-                return render_template('bad_colnames_types.html')
+                
     #Zapisanie pliku do formatu .pkl
     filename = dir_name + ".pkl"
     df.to_pickle(f'{DATASETS_DIRECTORY}/{dir_name}/{filename}')
@@ -108,7 +109,7 @@ def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
     # W tym miejscu następuje zapisanie statystyk do pliku csv
     with open(columns_filename, 'w', newline='') as csvfile:
         datawriter = csv.writer(csvfile, delimiter=' ',
-                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                                escapechar=' ', quoting=csv.QUOTE_NONE)
         print(df)
         for column in df:
             print(column)
@@ -131,7 +132,7 @@ def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
     lines = len(df)
     columns = len(df.columns)
 
-    return Dataset(
+    return info, Dataset(
         filename=filename,
         directory=os.path.join(DATASETS_DIRECTORY, dir_name),
         number_of_lines=lines,
