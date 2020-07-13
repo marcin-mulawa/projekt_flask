@@ -38,7 +38,7 @@ def get_object(df,column):
     nulls = df[column].isnull().sum()
     types = df[column].dtypes
     uniques = df[column].nunique()
-    return f'{column};{types};{uniques};'
+    return f'{column};{types};{uniques};{nulls}
 
 # Dane typu liczbowego
 def get_nums(df,column,dir_name):
@@ -56,7 +56,6 @@ def get_cat(df,column,dir_name):
 
 # Dane typu boolean (wymaga ręcznego rozpisania histogramu ze względu na typ [konwersja '1' i '0' na float])
 def get_bool(df,column,dir_name):
-    uniques = df[column].nunique()
     types = df[column].dtypes
     fig = plt.hist((df[column].astype(float)), bins=30)
     plt.title(column)
@@ -94,6 +93,8 @@ def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
             try:
                 if types == 'date':
                     df[column] = pd.to_datetime(df[column])
+                elif types == 'float':
+                    df[column] = float(df[column].replace('.',','))
                 else:
                     df[column] = df[column].astype(types)
                     print(df[column].dtypes)
