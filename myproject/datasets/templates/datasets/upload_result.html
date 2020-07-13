@@ -1,29 +1,10 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
+{% block content %}
 <title>Dodawanie zbioru rezultat</title>
-{% if tables %}
-<head>
-    <style>
-    table {
-      border-collapse: collapse;
-      width: 50%;
-    }
-    
-    th, td {
-      padding: 8px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    
-    tr:hover {background-color:rgb(187, 187, 187);}
-    </style>
-</head>
-
-    {% for table in tables %}
-        {{table|safe}}
-    {% endfor %}
-
-{% elif dataset %}
+{% if dataset %}
     <p>
+        {{info}}
+        <br/>
         Dodano plik: <b>{{dataset.filename}}</b>
         <br/>
         Folder: {{dataset.directory}}
@@ -36,3 +17,4 @@
     </p>
 {% endif %}
 <a href='/'>Powrót do listy danych</a>
+{% endblock %}

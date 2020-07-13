@@ -181,7 +181,7 @@ def upload_result():
             
             f.save(name_with_dir)
 
-            dataset_object = get_file_info(filename, columns_separator, coltypes, colnames)
+            info, dataset_object = get_file_info(filename, columns_separator, coltypes, colnames)
             print(dataset_object)
             if os.path.exists(name_with_dir):
                 try:
@@ -193,8 +193,9 @@ def upload_result():
                 db.session.add(dataset_object)
                 db.session.commit()
             # oraz generujemy szablon added_dataset.html z odpowiednią informacją
-        return render_template('upload_result.html', dataset=dataset_object)
-
+        
+        return render_template('upload_result.html', dataset=dataset_object, info=info)
+        
 
 @datasets_blueprint.route('/details/<filename>', methods=['GET', 'POST'])
 def details(filename):
