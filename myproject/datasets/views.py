@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import numpy as np
 import csv
+import shutil
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('agg')
@@ -38,21 +39,21 @@ def get_object(df,column):
     nulls = df[column].isnull().sum()
     types = df[column].dtypes
     uniques = df[column].nunique()
-    return f'{column};{types};{uniques};{nulls}
+    return f'{column};{types};{uniques};{nulls};;;;;;;;'
 
 # Dane typu liczbowego
 def get_nums(df,column,dir_name):
     desc = df[column].describe().loc[['min', 'mean', 'max', '50%', 'std']]
     types = df[column].dtypes
     histogram(df,column, dir_name)
-    return f'{column};{types};{desc[0]};{desc[1]};{desc[2]};{desc[3]};{desc[4]};{DATASETS_DIRECTORY}/{dir_name}/{column}_hist.png'
+    return f'{column};{types};;;{desc[0]};{desc[1]};{desc[2]};{desc[3]};{desc[4]};;;{DATASETS_DIRECTORY}/{dir_name}/{column}_hist.png'
 
 # Dane typu Category
 def get_cat(df,column,dir_name):
     uniques = df[column].nunique()
     types = df[column].dtypes
     histogram(df,column, dir_name)
-    return f'{column};{types};{uniques};{DATASETS_DIRECTORY}/{dir_name}/{column}_hist.png'
+    return f'{column};{types};{uniques};;;;;;;;;{DATASETS_DIRECTORY}/{dir_name}/{column}_hist.png'
 
 # Dane typu boolean (wymaga ręcznego rozpisania histogramu ze względu na typ [konwersja '1' i '0' na float])
 def get_bool(df,column,dir_name):
@@ -62,14 +63,14 @@ def get_bool(df,column,dir_name):
     plt.xlabel("Value")
     plt.ylabel("Frequency")
     plt.savefig(column + '_hist.png')
-    return f'{column};{types};{DATASETS_DIRECTORY}/{dir_name}/{column}_hist.png'
+    return f'{column};{types};;;;;;;;;;{DATASETS_DIRECTORY}/{dir_name}/{column}_hist.png'
 
 # Dane typu date:
 def get_date(df,column):
     types = df[column].dtypes
     mini = df[column].min()
     maxi = df[column].max()
-    return f'{column};{types};{mini};{maxi}'
+    return f'{column};{types};;;;;;;;{mini};{maxi};'
 
 
 def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
@@ -201,8 +202,17 @@ def upload_result():
 @datasets_blueprint.route('/details/<filename>', methods=['GET', 'POST'])
 def details(filename):
     dir_name = filename.split('.')[0]
-    df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{dir_name}_column_description.csv', sep=';')
-    return render_template("details.html", table = df)
+    if os.path.isfile(f'{DATASETS_DIRECTORY}/{dir_name}/{dir_name}_column_description.csv'):
+        try:
+            df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{dir_name}_column_description.csv',
+                names=['nazwa','typ','liczba_unikalnych','liczba_null','min',
+                        'srednia','max','mediana','std','najstarsza','najnowsza','histogram'], sep=';', header=None)
+        except:
+            df = pd.read_csv(f'{DATASETS_DIRECTORY}/{dir_name}/{dir_name}_column_description.csv',
+                names=['nazwa','typ','liczba_unikalnych','liczba_null','min',
+                        'srednia','max','mediana','std','najstarsza','najnowsza','histogram'], sep=';', header=None, encoding='latin1')
+        return render_template("details.html", tables = df)
+    return render_template("details.html", info = "Nie znaleziono pliku")
 
 
 @datasets_blueprint.route('/list', methods=['GET', 'POST'])
@@ -213,6 +223,18 @@ def list_datasets():
     return render_template('list_datasets.html', datasets=datasets)
 
 
-@datasets_blueprint.route('/remove_result')
-def remove_result():
-    pass
+@datasets_blueprint.route('/delete/<int:dataset_id>')
+def delete_user(dataset_id):
+    saved_dir = r'myproject/datasets/saved'
+
+    dataset_to_remove = db.session.query(Dataset).filter(Dataset.id == dataset_id).first()
+    if dataset_to_remove is None:
+        return render_template("delete.html", info=f"Brak pliku z id {dataset_id}.")
+    else:
+        filename = db.session.query(Dataset.filename).filter(Dataset.id == dataset_id).first()
+        dir_name = filename[0].split('.')[0]
+        if os.path.isdir(f'{saved_dir}/{dir_name}'): 
+            shutil.rmtree(f'{saved_dir}/{dir_name}')
+        db.session.delete(dataset_to_remove)
+        db.session.commit()
+        return render_template("delete.html", dataset=dataset_to_remove)

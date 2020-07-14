@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<title>Usuwanie danych</title>
+
+{% if dataset %}
+<p>
+    Usunięto plik:
+    <br/><!-- znacznik <br/> odpowiada przejściu do nowej linii -->
+    nazwa pliku: <b>{{ dataset.filename }}</b>
+    <br/>
+</p>
+{% else %}
+<p>
+    Nie usunięto pliku.
+    <br/>
+    {{ info }}
+</p>
+{% endif %}
+{% endblock %}

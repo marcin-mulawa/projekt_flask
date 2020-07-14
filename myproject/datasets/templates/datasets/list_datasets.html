@@ -29,7 +29,8 @@
                         <td>{{file.columns_name}}</td>
                         <td>{{file.columns_type}}</td>
                         <td>{{file.columns_description_filename}}</td>
-                        <td><a href="/datasets/delete">usuń</a></td>
+                        <td><a href="/datasets/delete/{{file.id}}">usuń</a></td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
