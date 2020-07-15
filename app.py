@@ -1,6 +1,6 @@
 from myproject import app, db
 from flask import render_template
-
+import os
 
 @app.route('/')
 def index():
