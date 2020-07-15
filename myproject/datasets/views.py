@@ -102,7 +102,7 @@ def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
             except ValueError:
                 info += f' Nie udało się przekonwertować kolumny {column} na {types}'
                 df[column] = df[column].astype(str)
-                
+    df = df.fillna(0)            
     #Zapisanie pliku do formatu .pkl
     filename = dir_name + ".pkl"
     df.to_pickle(f'{DATASETS_DIRECTORY}/{dir_name}/{filename}')
@@ -133,6 +133,7 @@ def get_file_info(filename, columns_separator, coltypes=None, colnames=None):
 
     lines = len(df)
     columns = len(df.columns)
+    coltypes = df.dtypes.tolist()
 
     return info, Dataset(
         filename=filename,
